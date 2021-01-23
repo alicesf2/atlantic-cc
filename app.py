@@ -99,19 +99,39 @@ def get_articles():
     if request.method == 'POST':
         if request.is_json:
             data = request.get_json()
-            new_article = Article(
-                article_id=data['id'],
-                slug=data['slug'],
-                title=data['title'],
-                dek=data['dek'],
-                published_date=data['published_date'],
-                canonical_url=data['canonical_url'],
-                word_count=data['word_count'],
-                tags=data['tags'],
-                embeds=data['embeds'])
-            db.session.add(new_article)
-            db.session.commit()
-            return {"message": f"Article {new_article.title} has been created successfully."}
+
+            # update article if article already exists
+            articles = Article.query.all()
+            found_article = None
+            for article in articles:
+                if article.id == data['id'] and article.canonical_url == data['canonical_url']:
+                    found_article = article
+                    break
+            if found_article:
+                found_article.slug = data['slug']
+                found_article.title = data['title']
+                found_article.dek = data['dek']
+                found_article.published_date = data['published_date']
+                found_article.word_count = data['word_count']
+                found_article.tags = data['tags']
+                found_article.embeds = data['embeds']
+                db.session.commit()
+                return {"message": f"Article {found_article.id} has been updated successfully."}
+            else:
+                # create new article with given id and canonical_url
+                new_article = Article(
+                    article_id=data['id'],
+                    slug=data['slug'],
+                    title=data['title'],
+                    dek=data['dek'],
+                    published_date=data['published_date'],
+                    canonical_url=data['canonical_url'],
+                    word_count=data['word_count'],
+                    tags=data['tags'],
+                    embeds=data['embeds'])
+                db.session.add(new_article)
+                db.session.commit()
+                return {"message": f"Article {new_article.id} has been created successfully."}
         else:
             return {"error": "The request is not in JSON format."}
 
