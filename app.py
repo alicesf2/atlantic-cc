@@ -2,13 +2,14 @@ from flask import Flask
 from flask import request
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
-from sqlalchemy.dialects.postgresql import JSON
 from datetime import datetime
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://postgres:postgres@localhost:5432/afang8"
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
+
+# MODELS
 
 
 class Article(db.Model):
@@ -37,6 +38,37 @@ class Article(db.Model):
 
     def __repr__(self):
         return '<id {}>'.format(self.id)
+
+
+class Art(db.Model):
+    __tablename__ = 'art'
+
+    id = db.Column(db.String(), primary_key=True)
+    art_type = db.Column(db.String(), nullable=False)
+    article_id = db.Column(db.Integer(), db.ForeignKey(
+        'article.id'), nullable=False)
+
+    def __init__(self, art_type, article_id):
+        self.art_type = art_type
+        self.article_id = article_id
+
+    def __repr__(self):
+        return '<id {}>'.format(self.id)
+
+
+class Author(db.Model):
+    __tablename__ = 'authors'
+
+    id = db.Column(db.String(), primary_key=True)
+    slug = db.Column(db.String(), nullable=False)
+
+    def __init__(self, slug):
+        self.slug = slug
+
+    def __repr__(self):
+        return '<id {}>'.format(self.id)
+
+# ROUTES
 
 
 @app.route('/')
