@@ -46,9 +46,10 @@ class Art(db.Model):
     id = db.Column(db.String(), primary_key=True)
     art_type = db.Column(db.String(), nullable=False)
     article_id = db.Column(db.Integer(), db.ForeignKey(
-        'article.id'), nullable=False)
+        'articles.id'), nullable=False)
 
-    def __init__(self, art_type, article_id):
+    def __init__(self, art_id, art_type, article_id):
+        self.id = art_id
         self.art_type = art_type
         self.article_id = article_id
 
@@ -62,11 +63,35 @@ class Author(db.Model):
     id = db.Column(db.String(), primary_key=True)
     slug = db.Column(db.String(), nullable=False)
 
-    def __init__(self, slug):
+    def __init__(self, author_id, slug):
+        self.id = author_id
         self.slug = slug
 
     def __repr__(self):
         return '<id {}>'.format(self.id)
+
+
+class ArticleAuthor(db.Model):
+    __tablename__ = 'articles_authors'
+
+    article_id = db.Column(db.String(), db.ForeignKey(
+        'articles.id'), nullable=False)
+    author_id = db.Column(db.String(), db.ForeignKey(
+        'authors.id'), nullable=False)
+
+    __table_args__ = (
+        db.PrimaryKeyConstraint(
+            article_id, author_id,
+        ),
+    )
+
+    def __init__(self, article_id, author_id):
+        self.article_id = article_id,
+        self.author_id = author_id
+
+    def __repr__(self):
+        return '<id {}>'.format(self.id)
+
 
 # ROUTES
 
@@ -76,8 +101,32 @@ def hello():
     return "Hello World!"
 
 
+@app.route('/art', methods=['GET'])
+def get_art():
+    art = Art.query.all()
+    results = [
+        {
+            "id": item.id,
+            "type": item.art_type
+        } for item in art
+    ]
+    return {"count": len(art), "art": results}
+
+
+@app.route('/authors', methods=['GET'])
+def get_authors():
+    authors = Author.query.all()
+    results = [
+        {
+            "id": author.id,
+            "slug": author.slug
+        } for author in authors
+    ]
+    return {"count": len(authors), "authors": results}
+
+
 @app.route('/articles', methods=['GET', 'POST', 'PUT'])
-def get_articles():
+def articles():
     if request.method == 'GET':
         articles = Article.query.all()
         results = [
@@ -130,6 +179,26 @@ def get_articles():
                     tags=data['tags'],
                     embeds=data['embeds'])
                 db.session.add(new_article)
+                db.session.commit()
+
+                # update art, authors, and articleauthors
+                new_art = Art(
+                    art_id=data['lead_art']['id'],
+                    art_type=data['lead_art']['type'],
+                    article_id=data['id'])
+                db.session.add(new_art)
+                db.session.commit()
+
+                authors = []
+                article_authors = []
+                for author in data['authors']:
+                    authors.append(
+                        Author(author_id=author['id'], slug=author['slug']))
+                    article_authors.append(ArticleAuthor(
+                        article_id=data['id'], author_id=author['id']))
+                db.session.bulk_save_objects(authors)
+                db.session.commit()
+                db.session.bulk_save_objects(article_authors)
                 db.session.commit()
                 return {"message": f"Article {new_article.id} has been created successfully."}
         else:
