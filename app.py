@@ -1,13 +1,11 @@
 from flask import Flask
 from flask import request
 from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate
 from datetime import datetime
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://postgres:postgres@localhost:5432/afang8"
+app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://postgres:postgres@localhost:5432/postgres"
 db = SQLAlchemy(app)
-migrate = Migrate(app, db)
 
 # MODELS
 
@@ -45,7 +43,7 @@ class Art(db.Model):
 
     id = db.Column(db.String(), primary_key=True)
     art_type = db.Column(db.String(), nullable=False)
-    article_id = db.Column(db.Integer(), db.ForeignKey(
+    article_id = db.Column(db.String(), db.ForeignKey(
         'articles.id'), nullable=False)
 
     def __init__(self, art_id, art_type, article_id):
