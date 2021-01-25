@@ -38,8 +38,9 @@ ArticleAuthor: {
     `source env/bin/activate`
 2. Install the `requirements.txt` file
     `pip install -r requirements.txt`
-3. Connect to local postgresql database (I used Postico for this: https://eggerapps.at/postico/docs/v1.0.3/install-postgresapp.html)
-4. To run the Flask app, type `python app.py`
+3. Connect to local postgresql database (I used Postico for this: https://eggerapps.at/postico/docs/v1.0.3/install-postgresapp.html). Make sure you're looking at the default `postgres` database.
+4. To populate the database with tables according to the models I defined in `app.py`, run `python manage.py db upgrade`.
+5. To run the Flask app, type `python manage.py runserver`.
 
 ### What I was able to complete:
 - GET requests for articles, art, and authors
